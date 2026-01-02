@@ -21,6 +21,20 @@ export default function SchedulerTab({ instances, targetInstance, setTargetInsta
         localStorage.setItem('scheduledCampaigns', JSON.stringify(campaigns))
     }, [campaigns])
 
+    useEffect(() => {
+        const handleUpdates = () => {
+            const saved = localStorage.getItem('scheduledCampaigns')
+            if (saved) setCampaigns(JSON.parse(saved))
+        }
+        window.addEventListener('campaigns-updated', handleUpdates)
+        // Also listen to storage events for cross-tab sync
+        window.addEventListener('storage', handleUpdates)
+        return () => {
+            window.removeEventListener('campaigns-updated', handleUpdates)
+            window.removeEventListener('storage', handleUpdates)
+        }
+    }, [])
+
     const handleSave = () => {
         if (!form.name || !form.message || !form.numbers || !form.scheduledAt) {
             return alert('Fill all required fields')

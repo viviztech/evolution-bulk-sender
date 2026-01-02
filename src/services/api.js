@@ -4,7 +4,7 @@ const api = axios.create();
 
 // Helper to get headers
 const getHeaders = () => {
-    const apiKey = localStorage.getItem('evo_api_key');
+    const apiKey = localStorage.getItem('evo_api_key') || 'B6D711FCDE4D4FD5936544120E713976';
     return {
         'Content-Type': 'application/json',
         'apikey': apiKey
@@ -12,7 +12,7 @@ const getHeaders = () => {
 };
 
 const getBaseUrl = () => {
-    return localStorage.getItem('evo_api_url') || 'http://localhost:8080';
+    return localStorage.getItem('evo_api_url') || 'http://localhost:8081';
 };
 
 export const evolutionApi = {
@@ -30,16 +30,16 @@ export const evolutionApi = {
     createInstance: async (instanceName, options = {}) => {
         const response = await api.post(`${getBaseUrl()}/instance/create`, {
             instanceName,
-            token: options.token || '',
+            token: options.token || undefined,
             qrcode: options.qrcode !== false,
             integration: options.integration || 'WHATSAPP-BAILEYS',
-            number: options.number || '',
-            webhook: options.webhook || null,
+            number: options.number || undefined,
+            webhook: options.webhook || undefined,
             webhookByEvents: options.webhookByEvents || false,
             websocketEnabled: options.websocketEnabled || false,
-            chatwootAccountId: options.chatwootAccountId || null,
-            chatwootToken: options.chatwootToken || null,
-            chatwootUrl: options.chatwootUrl || null,
+            chatwootAccountId: options.chatwootAccountId || undefined,
+            chatwootToken: options.chatwootToken || undefined,
+            chatwootUrl: options.chatwootUrl || undefined,
             chatwootSignMsg: options.chatwootSignMsg || false,
             chatwootReopenConversation: options.chatwootReopenConversation || false,
             chatwootConversationPending: options.chatwootConversationPending || false,
@@ -104,8 +104,8 @@ export const evolutionApi = {
             text,
             delay: options.delay || 1200,
             linkPreview: options.linkPreview !== false,
-            mentionsEveryOne: options.mentionsEveryOne || false,
-            mentioned: options.mentioned || []
+            mentionsEveryOne: options.mentionsEveryOne || undefined,
+            mentioned: (options.mentioned && options.mentioned.length > 0) ? options.mentioned : undefined
         }, {
             headers: getHeaders()
         });
@@ -116,13 +116,19 @@ export const evolutionApi = {
     // MESSAGING - MEDIA
     // =============================================
 
-    sendMedia: async (instanceName, number, media, fileName, caption, mediatype = 'image') => {
+    sendMedia: async (instanceName, number, media, fileName, caption, mediatype = 'image', options = {}) => {
+        const cleanMedia = media.replace(/^data:.*?;base64,/, '');
         const response = await api.post(`${getBaseUrl()}/message/sendMedia/${instanceName}`, {
             number,
-            media,
+            media: cleanMedia,
             mediatype, // image, video, audio, document
+            mimetype: options.mimetype,
             caption,
-            fileName
+            fileName,
+            delay: options.delay || 1200,
+            linkPreview: options.linkPreview !== false,
+            mentionsEveryOne: options.mentionsEveryOne || undefined,
+            mentioned: (options.mentioned && options.mentioned.length > 0) ? options.mentioned : undefined
         }, {
             headers: getHeaders()
         });
