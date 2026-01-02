@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Evolution Bulk Sender Web App
+  bulk-sender:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evolution-bulk-sender
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - evolution-network
+
+  # Evolution API (WhatsApp Backend)
+  evolution-api:
+    image: atendai/evolution-api:latest
+    container_name: evolution-api
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTHENTICATION_API_KEY=${EVOLUTION_API_KEY:-B6D711FCDE4D4FD5936544120E713976}
+      - AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES=true
+    volumes:
+      - evolution_store:/evolution/store
+      - evolution_instances:/evolution/instances
+    restart: unless-stopped
+    networks:
+      - evolution-network
+
+networks:
+  evolution-network:
+    driver: bridge
+
+volumes:
+  evolution_store:
+  evolution_instances:
